@@ -97,7 +97,7 @@ namespace ConsoleInteractive {
         /// <summary>
         /// Console width is actually 0 indexed, so we need to subtract 1 from the width.
         /// </summary>
-        internal static int UserInputBufferMaxLength { get { return Console.BufferWidth - 1 - PrefixTotalLength; } }
+        internal static int UserInputBufferMaxLength => Utils.GetDefaultBufferWidth - 1 - PrefixTotalLength;
 
         /// <summary>
         /// Stores the contents of the input area at the time of the last call to redraw.
@@ -322,7 +322,7 @@ namespace ConsoleInteractive {
         /// </summary>
         internal static void ClearVisibleUserInput(int startPos = 0) {
             lock (InternalContext.WriteLock) {
-                if (startPos < Console.BufferWidth) {
+                if (startPos < Utils.GetDefaultBufferWidth) {
                     Console.CursorLeft = startPos;
                     Console.Write(new string(' ', Math.Max(0,
                         PrefixTotalLength + Math.Min(UserInputBuffer.Length - BufferOutputAnchor, UserInputBufferMaxLength) - startPos)));
@@ -358,7 +358,7 @@ namespace ConsoleInteractive {
             if (Console.IsOutputRedirected || !ConsoleReader.DisplayUesrInput)
                 return;
 
-            StringBuilder sb = new(Console.BufferWidth);
+            StringBuilder sb = new(Utils.GetDefaultBufferWidth);
             int bufMaxLen = UserInputBufferMaxLength;
 
             int leftCursorPos;

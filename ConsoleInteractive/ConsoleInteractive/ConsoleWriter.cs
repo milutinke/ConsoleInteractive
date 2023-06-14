@@ -43,7 +43,7 @@ namespace ConsoleInteractive {
 
             bool escape = false;
             int lineCnt = 0, cursorPos = 0, firstLineLength = -1;
-            int bufWidth = Console.BufferWidth;
+            int bufWidth = Utils.GetDefaultBufferWidth;
             foreach (char c in value) {
                 if (!escape && c == '\u001B') {
                     escape = true;

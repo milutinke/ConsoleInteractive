@@ -140,13 +140,13 @@ namespace ConsoleInteractive {
                     if (needCheckBufUpdate)
                         CheckInputBufferUpdate();
                 } else {
-                    while (!Console.KeyAvailable) {
+                    while (Console.IsInputRedirected && !Console.KeyAvailable) {
                         if (token.IsCancellationRequested) return;
                         Thread.Sleep(8);
                     }
 
                     bool needCheckBufUpdate = false;
-                    while (Console.KeyAvailable) {
+                    while (Console.IsInputRedirected && Console.KeyAvailable) {
                         ConsoleKeyInfo k = Console.ReadKey(true);
                         if (token.IsCancellationRequested) return;
 
