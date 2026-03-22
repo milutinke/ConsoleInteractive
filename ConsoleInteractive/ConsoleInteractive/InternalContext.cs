@@ -27,11 +27,9 @@ namespace ConsoleInteractive {
 
         internal static void SetCursorVisible(bool visible) {
             // It's useful to have the cursor visible in debug situations
-            #if DEBUG
-                return;
-            #endif
-
+            #if !DEBUG
             Console.CursorVisible = visible;
+            #endif
         }
 
         [GeneratedRegex("\\u001B\\[[\\d;]+m", RegexOptions.Compiled)]
