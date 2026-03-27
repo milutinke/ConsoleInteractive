@@ -11,7 +11,7 @@
         <LangVersion>default</LangVersion>
         <TargetFramework>net10.0</TargetFramework>
         <OutputType>Library</OutputType>
-        <PublishSingleFile>false</PublishSingleFile>
+        <IsPublishable>false</IsPublishable>
     </PropertyGroup>
 
     <ItemGroup>
