@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text.RegularExpressions;
 
 namespace ConsoleInteractive {
@@ -35,7 +35,7 @@ namespace ConsoleInteractive {
         [GeneratedRegex("\\u001B\\[[\\d;]+m", RegexOptions.Compiled)]
         private static partial Regex GetVT100CodeRegex();
 
-        [GeneratedRegex("(§([0-9a-fk-or]|(?:§[0-9a-fr])))", RegexOptions.Compiled)]
+        [GeneratedRegex("(§([0-9a-fk-or]|(?:#[0-9a-fA-F]{6})|(?:§[0-9a-fr])|(?:§#[0-9a-fA-F]{6})))", RegexOptions.Compiled)]
         private static partial Regex GetFormatRegex();
     }
 }
