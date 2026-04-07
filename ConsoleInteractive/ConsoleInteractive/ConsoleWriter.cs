@@ -1,5 +1,6 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Text;
 using System.Text.RegularExpressions;
 using PInvoke;
@@ -177,7 +178,10 @@ namespace ConsoleInteractive {
 
                     string matchValue = match.Groups[1].Value;
                     if (matchValue[1] == '§') { // background
-                        switch (matchValue[2]) {
+                        if (matchValue.Length > 3 && matchValue[2] == '#') {
+                            var (r, g, b) = ParseHexRgb(matchValue.AsSpan(3));
+                            sb.Append($"\u001B[48;2;{r};{g};{b}m");
+                        } else switch (matchValue[2]) {
                             case '0': sb.Append("\u001B[40m"); break;
                             case '1': sb.Append("\u001B[44m"); break;
                             case '2': sb.Append("\u001B[42m"); break;
@@ -196,7 +200,10 @@ namespace ConsoleInteractive {
                             case 'f': sb.Append("\u001B[107m"); break;
                             case 'r': funkyMode = false; sb.Append("\u001B[0m"); break;
                         }
-                    } else { // foreground
+                    } else if (matchValue[1] == '#') { // foreground hex
+                        var (r, g, b) = ParseHexRgb(matchValue.AsSpan(2));
+                        sb.Append($"\u001B[38;2;{r};{g};{b}m");
+                    } else { // foreground standard
                         switch (matchValue[1]) {
                             case '0': sb.Append("\u001B[30m"); break;
                             case '1': sb.Append("\u001B[34m"); break;
@@ -239,7 +246,12 @@ namespace ConsoleInteractive {
                     string matchValue = match.Groups[1].Value;
 
                     bool isForeground = matchValue[1] != '§';
-                    switch (isForeground ? matchValue[1] : matchValue[2]) {
+                    char colorChar = isForeground ? matchValue[1] : matchValue[2];
+                    if (colorChar == '#') {
+                        int hexStart = isForeground ? 2 : 3;
+                        var (r, g, b) = ParseHexRgb(matchValue.AsSpan(hexStart));
+                        colors.Add(new(sb.Length, isForeground, NearestConsoleColor(r, g, b)));
+                    } else switch (colorChar) {
                         case '0': colors.Add(new(sb.Length, isForeground, ConsoleColor.Gray)); break;
                         case '1': colors.Add(new(sb.Length, isForeground, ConsoleColor.DarkBlue)); break;
                         case '2': colors.Add(new(sb.Length, isForeground, ConsoleColor.DarkGreen)); break;
@@ -272,6 +284,47 @@ namespace ConsoleInteractive {
                     colors.Add(new(sb.Length, true, ConsoleColor.White));
                 Write(sb.ToString(), colors);
             }
+        }
+
+        private static (byte R, byte G, byte B) ParseHexRgb(ReadOnlySpan<char> hex) {
+            byte r = byte.Parse(hex[..2], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            byte g = byte.Parse(hex[2..4], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            byte b = byte.Parse(hex[4..6], NumberStyles.HexNumber, CultureInfo.InvariantCulture);
+            return (r, g, b);
+        }
+
+        private static readonly (int R, int G, int B, ConsoleColor Color)[] ConsoleColorMap = {
+            (0,   0,   0,   ConsoleColor.Black),
+            (0,   0,   170, ConsoleColor.DarkBlue),
+            (0,   170, 0,   ConsoleColor.DarkGreen),
+            (0,   170, 170, ConsoleColor.DarkCyan),
+            (170, 0,   0,   ConsoleColor.DarkRed),
+            (170, 0,   170, ConsoleColor.DarkMagenta),
+            (255, 170, 0,   ConsoleColor.DarkYellow),
+            (170, 170, 170, ConsoleColor.Gray),
+            (85,  85,  85,  ConsoleColor.DarkGray),
+            (85,  85,  255, ConsoleColor.Blue),
+            (85,  255, 85,  ConsoleColor.Green),
+            (85,  255, 255, ConsoleColor.Cyan),
+            (255, 85,  85,  ConsoleColor.Red),
+            (255, 85,  255, ConsoleColor.Magenta),
+            (255, 255, 85,  ConsoleColor.Yellow),
+            (255, 255, 255, ConsoleColor.White),
+        };
+
+        private static ConsoleColor NearestConsoleColor(byte r, byte g, byte b) {
+            double bestDist = double.MaxValue;
+            ConsoleColor bestColor = ConsoleColor.White;
+            foreach (var (cr, cg, cb, cc) in ConsoleColorMap) {
+                double rMean = (r + cr) / 2.0;
+                double dr = r - cr, dg = g - cg, db = b - cb;
+                double dist = (2 + rMean / 256) * dr * dr + 4 * dg * dg + (2 + (255 - rMean) / 256) * db * db;
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    bestColor = cc;
+                }
+            }
+            return bestColor;
         }
     }
 }
